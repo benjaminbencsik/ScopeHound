@@ -23,7 +23,7 @@ A simple, clean, and colorized Bash script that automates the initial phase of b
 
 
 
-
+---
 
 
 
