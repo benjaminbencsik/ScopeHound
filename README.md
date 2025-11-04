@@ -12,6 +12,15 @@ A simple, clean, and colorized Bash script that automates the initial phase of b
 
 ## Installation
 
+```
+1.  Clone this repository or download the scopehound.sh script.
+    ```git clone https://github.com/benjaminbencsik/ScopeHound```
+2.  Make the script executable:
+    
+    ```chmod +x scopehound.sh```
+```
+
+
 `ScopeHound` is a wrapper script, so you must have the following tools installed and available in your system's `PATH`.
 
 * [subfinder](https://github.com/projectdiscovery/subfinder)
@@ -20,17 +29,10 @@ A simple, clean, and colorized Bash script that automates the initial phase of b
 * [naabu](https://github.com/projectdiscovery/naabu)
 * [httpx](https://github.com/projectdiscovery/httpx)
 
+
 Usage
 ---
-
-1.  Clone this repository or download the scopehound.sh script.
-
-2.  Make the script executable:
-    
-    ```chmod +x scopehound.sh```
-    
-
-3.  Run the script against a single target domain:
+1.  Run the script against a single target domain:
     
     ```./scopehound.sh target.com```
     
