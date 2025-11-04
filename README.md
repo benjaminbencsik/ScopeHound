@@ -27,29 +27,41 @@ Usage
 
 2.  Make the script executable:
     
-    chmod +x scopehound.sh
+    ```chmod +x scopehound.sh```
     
 
 3.  Run the script against a single target domain:
     
-    ./scopehound.sh target.com
+    ```./scopehound.sh target.com```
     
 
 Example Output
 ---
 
 $ ./scopehound.sh target.com
+
 [*] Gathering subdomains for target.com...
+
 [+] Subdomain gathering complete.
+
 [*] Combining and sorting unique subdomains...
+
 [+] Found 123 unique subdomains.
+
 [*] Running fast port scan (Top 100) on subdomains...
+
 [+] Port scan complete.
+
 [*] Probing for live web servers...
+
 [+] HTTP probing complete.
 
 --- Live Web Servers Found for target.com ---
+
 https://www.target.com
+
 http://dev.target.com:8080
+
 https://api.target.com
+
 https://store.target.com
