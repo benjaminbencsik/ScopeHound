@@ -12,13 +12,12 @@ A simple, clean, and colorized Bash script that automates the initial phase of b
 
 ## Installation
 
-```
-1.  Clone this repository or download the scopehound.sh script.
+1.  Clone this repository.
     ```git clone https://github.com/benjaminbencsik/ScopeHound```
+
 2.  Make the script executable:
     
     ```chmod +x scopehound.sh```
-```
 
 
 `ScopeHound` is a wrapper script, so you must have the following tools installed and available in your system's `PATH`.
