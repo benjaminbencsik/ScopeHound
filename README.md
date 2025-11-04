@@ -21,6 +21,7 @@ A simple, clean, and colorized Bash script that automates the initial phase of b
     ```chmod +x scopehound.sh```
 
 
+
 `ScopeHound` is a wrapper script, so you must have the following tools installed and available in your system's `PATH`.
 
 * [subfinder](https://github.com/projectdiscovery/subfinder)
