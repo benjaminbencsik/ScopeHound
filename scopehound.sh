@@ -16,49 +16,64 @@ TARGET=$1
 RESULTS_DIR="$(pwd)/$TARGET"
 mkdir -p "$RESULTS_DIR/gf_patterns"
 
-# --- Step 1: Subdomain Enumeration ---
-echo -e "${BLUE}[*] Gathering Subdomains...${NC}"
-subfinder -d "$TARGET" -silent -o "$RESULTS_DIR/subfinder.txt" > /dev/null 2>&1
-assetfinder --subs-only "$TARGET" > "$RESULTS_DIR/assetfinder.txt" 2>/dev/null
-findomain -t "$TARGET" -q > "$RESULTS_DIR/findomain.txt" 2>/dev/null
+echo -e "${YELLOW}[i] Target: $TARGET${NC}"
 
-sort -u "$RESULTS_DIR/subfinder.txt" "$RESULTS_DIR/assetfinder.txt" "$RESULTS_DIR/findomain.txt" > "$RESULTS_DIR/all_subdomains.txt"
-echo -e "${GREEN}[+] Found $(wc -l < "$RESULTS_DIR/all_subdomains.txt") Unique Subdomains.${NC}"
+# --- Step 1: Subdomain Enumeration ---
+if [ -s "$RESULTS_DIR/all_subdomains.txt" ]; then
+    echo -e "${GREEN}[-] Subdomains already gathered. Skipping...${NC}"
+else
+    echo -e "${BLUE}[*] Gathering Subdomains...${NC}"
+    subfinder -d "$TARGET" -silent -o "$RESULTS_DIR/subfinder.txt" > /dev/null 2>&1
+    assetfinder --subs-only "$TARGET" > "$RESULTS_DIR/assetfinder.txt" 2>/dev/null
+    findomain -t "$TARGET" -q > "$RESULTS_DIR/findomain.txt" 2>/dev/null
+    sort -u "$RESULTS_DIR/subfinder.txt" "$RESULTS_DIR/assetfinder.txt" "$RESULTS_DIR/findomain.txt" > "$RESULTS_DIR/all_subdomains.txt"
+fi
 
 # --- Step 2: Port Scan ---
-echo -e "${BLUE}[*] Running Port Scan (Top 100)...${NC}"
-naabu -list "$RESULTS_DIR/all_subdomains.txt" -top-ports 100 -connect-scan -silent -o "$RESULTS_DIR/open_ports.txt" > /dev/null 2>&1
+if [ -s "$RESULTS_DIR/open_ports.txt" ]; then
+    echo -e "${GREEN}[-] Port scan already completed. Skipping...${NC}"
+else
+    echo -e "${BLUE}[*] Running Port Scan (Top 100)...${NC}"
+    naabu -list "$RESULTS_DIR/all_subdomains.txt" -top-ports 100 -connect-scan -silent -o "$RESULTS_DIR/open_ports.txt" > /dev/null 2>&1
+fi
 
 # --- Step 3: Live Web Probing ---
-echo -e "${BLUE}[*] Probing For Live Web Servers...${NC}"
-httpx -l "$RESULTS_DIR/all_subdomains.txt" -silent -o "$RESULTS_DIR/alive_subs.txt" > /dev/null 2>&1
+if [ -s "$RESULTS_DIR/alive_subs.txt" ]; then
+    echo -e "${GREEN}[-] Live probing already completed. Skipping...${NC}"
+else
+    echo -e "${BLUE}[*] Probing For Live Web Servers...${NC}"
+    httpx -l "$RESULTS_DIR/all_subdomains.txt" -silent -o "$RESULTS_DIR/alive_subs.txt" > /dev/null 2>&1
+fi
+
 ALIVE_COUNT=$(wc -l < "$RESULTS_DIR/alive_subs.txt" 2>/dev/null || echo 0)
 
 # --- Step 4: GAU & Every GF Pattern ---
 if [ "$ALIVE_COUNT" -gt 0 ]; then
-    echo -e "${BLUE}[*] Fetching URLs & Running All GF Patterns...${NC}"
-    cat "$RESULTS_DIR/alive_subs.txt" | gau --subs > "$RESULTS_DIR/gau.txt" 2>/dev/null
-    
-    # Identify GF patterns directory
-    GF_PATH="$HOME/.gf"
-    [ ! -d "$GF_PATH" ] && GF_PATH="$HOME/Gf-Patterns" # Backup path check
-
-    if [ -d "$GF_PATH" ]; then
-        # Loop through every available pattern file
-        for pattern_file in "$GF_PATH"/*.json; do
-            pattern_name=$(basename "$pattern_file" .json)
-            gf "$pattern_name" "$RESULTS_DIR/gau.txt" > "$RESULTS_DIR/gf_patterns/$pattern_name.txt" 2>/dev/null
-            
-            # Remove empty files to keep the directory clean
-            [ ! -s "$RESULTS_DIR/gf_patterns/$pattern_name.txt" ] && rm "$RESULTS_DIR/gf_patterns/$pattern_name.txt"
-        done
+    if [ -s "$RESULTS_DIR/gau.txt" ]; then
+        echo -e "${GREEN}[-] URL fetching and GF patterns already completed. Skipping...${NC}"
     else
-        echo -e "${RED}[!] GF patterns directory not found. Skipping GF step.${NC}"
+        echo -e "${BLUE}[*] Fetching URLs & Running All GF Patterns...${NC}"
+        cat "$RESULTS_DIR/alive_subs.txt" | gau --subs > "$RESULTS_DIR/gau.txt" 2>/dev/null
+        
+        GF_PATH="$HOME/.gf"
+        [ ! -d "$GF_PATH" ] && GF_PATH="$HOME/Gf-Patterns"
+
+        if [ -d "$GF_PATH" ]; then
+            for pattern_file in "$GF_PATH"/*.json; do
+                pattern_name=$(basename "$pattern_file" .json)
+                gf "$pattern_name" "$RESULTS_DIR/gau.txt" > "$RESULTS_DIR/gf_patterns/$pattern_name.txt" 2>/dev/null
+                [ ! -s "$RESULTS_DIR/gf_patterns/$pattern_name.txt" ] && rm "$RESULTS_DIR/gf_patterns/$pattern_name.txt"
+            done
+        fi
     fi
-    
+
     # --- Step 5: Nuclei ---
-    echo -e "${BLUE}[*] Hunting For Vulnerabilities With Nuclei...${NC}"
-    nuclei -l "$RESULTS_DIR/alive_subs.txt" -t ~/nuclei-templates -silent -o "$RESULTS_DIR/nuclei.txt" > /dev/null 2>&1
+    if [ -s "$RESULTS_DIR/nuclei.txt" ]; then
+        echo -e "${GREEN}[-] Nuclei scan already completed. Skipping...${NC}"
+    else
+        echo -e "${BLUE}[*] Hunting For Vulnerabilities With Nuclei...${NC}"
+        nuclei -l "$RESULTS_DIR/alive_subs.txt" -t ~/nuclei-templates -silent -o "$RESULTS_DIR/nuclei.txt" > /dev/null 2>&1
+    fi
 fi
 
 # --- FINAL SUMMARY ---
@@ -69,7 +84,7 @@ echo -e "${GREEN}[+] Interesting Open Ports:${NC}"
 if [ -s "$RESULTS_DIR/open_ports.txt" ]; then
     INTERESTING_PORTS=$(grep -vE ':80$|:443$' "$RESULTS_DIR/open_ports.txt")
     if [ -z "$INTERESTING_PORTS" ]; then
-        echo -e "    ${RED}Only standard web ports (80/443) found.${NC}"
+        echo -e "    ${RED}Only standard web ports (80/443).${NC}"
     else
         echo "$INTERESTING_PORTS" | sed 's/^/    - /'
     fi
@@ -79,7 +94,15 @@ fi
 
 echo -e ""
 
-# 2. Nuclei Findings (Low+)
+# 2. Priority GF Hits (SQLi / RCE)
+if [ -f "$RESULTS_DIR/gf_patterns/sqli.txt" ] || [ -f "$RESULTS_DIR/gf_patterns/rce.txt" ]; then
+    echo -e "${RED}[!] Critical Patterns Found:${NC}"
+    [ -f "$RESULTS_DIR/gf_patterns/sqli.txt" ] && echo -e "    - SQLi patterns found in: $RESULTS_DIR/gf_patterns/sqli.txt"
+    [ -f "$RESULTS_DIR/gf_patterns/rce.txt" ] && echo -e "    - RCE patterns found in: $RESULTS_DIR/gf_patterns/rce.txt"
+    echo -e ""
+fi
+
+# 3. Nuclei Findings (Low+)
 echo -e "${GREEN}[+] Nuclei Findings (Low+):${NC}"
 if [ -s "$RESULTS_DIR/nuclei.txt" ]; then
     VULNS=$(grep -v "\[info\]" "$RESULTS_DIR/nuclei.txt")
@@ -93,4 +116,4 @@ else
 fi
 
 echo -e "${YELLOW}===============================================${NC}"
-echo -e "${GREEN}[+] Recon Completed. Patterns saved in: $RESULTS_DIR/gf_patterns/${NC}"
+echo -e "${GREEN}[+] Done! Full data in: $RESULTS_DIR${NC}"
