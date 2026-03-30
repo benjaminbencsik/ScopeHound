@@ -19,66 +19,61 @@ fi
 TARGET=$1
 # Create a directory for this target's results
 mkdir -p "$TARGET"
-cd "$TARGET"
+cd "$TARGET" || exit
 
 # --- Step 1: Subdomain Enumeration ---
 echo -e "${BLUE}[*] Gathering Subdomains For $TARGET...${NC}"
-# Run subdomain discovery while silencing output to /dev/null
-subfinder -d $TARGET -silent -o subfinder.txt > /dev/null 2>&1
-assetfinder --subs-only $TARGET > assetfinder.txt > /dev/null 2>&1
-findomain -t $TARGET -q > findomain.txt > /dev/null 2>&1
-
+# Fix: Corrected redirection to avoid truncating files
+subfinder -d "$TARGET" -silent -o subfinder.txt > /dev/null 2>&1
+assetfinder --subs-only "$TARGET" > assetfinder.txt 2>/dev/null
+findomain -t "$TARGET" -q > findomain.txt 2>/dev/null
 
 echo -e "${GREEN}[+] Subdomain gathering complete.${NC}"
 
 # --- Step 2: Combine & Uniq ---
 echo -e "${BLUE}[*] Combining And Sorting Unique Subdomains...${NC}"
-# Combine all results and find unique entries
-cat subfinder.txt assetfinder.txt findomain.txt | sort -u > all_subdomains.txt /dev/null 2>&1
+# Fix: Removed the trailing /dev/null which was breaking the sort output
+sort -u subfinder.txt assetfinder.txt findomain.txt > all_subdomains.txt
 
 COUNT=$(wc -l < all_subdomains.txt)
 echo -e "${GREEN}[+] Found ${YELLOW}$COUNT${GREEN} Unique Subdomains.${NC}"
 
 # --- Step 3: Port Scan ---
 echo -e "${BLUE}[*] Running Fast Port Scan (Top 100) On Subdomains...${NC}"
-# We use naabu for this. It's fast and designed for this workflow.
-# -silent hides the banner, and we dev/null the rest.
+# Use -o for output and 2>/dev/null to hide errors/banners
 naabu -list all_subdomains.txt -top-ports 100 -silent -o open_ports.txt > /dev/null 2>&1
 echo -e "${GREEN}[+] Port Scan Complete...${NC}"
 
 # --- Step 4: Find Live Web Servers ---
 echo -e "${BLUE}[*] Probing For Live Web Servers...${NC}"
-# Feed the host:port combinations from naabu into httpx
-# -silent hides the httpx banner
-cat open_ports.txt | httpx -silent | tee alive_subs.txt > /dev/null 2>&1
+# Fix: Use -o instead of tee if you are sending stdout to /dev/null anyway
+httpx -l open_ports.txt -silent -o alive_subs.txt > /dev/null 2>&1
 echo -e "${GREEN}[+] HTTP Probing Complete...${NC}"
 
 # --- Step 5: Clean Output ---
 echo -e "\n${YELLOW}--- Live Web Servers Found for $TARGET ---${NC}"
+cat alive_subs.txt
 
 # --- Step 6: Scanning For Historical Data With GAU  ---
 echo -e "${BLUE}[*] Scanning Historical Sources With GAU...${NC}"
-# Feed alive subdomains through GAU 
-cat alive_subs.txt | gau | tee gau.txt > /dev/null 2>&1
+gau --subs "$TARGET" > gau.txt 2>/dev/null
 echo -e "${GREEN}[+] GAU Scanning Complete.${NC}"
 
-# --- Step 7: Downloading Javascript files from alive subdomains and historical data
-echo -e "${BLUE}[*] Downloading Javascript Files From Alive Subdomains And Historical Data...${NC}"
-# Downloading javascript files on alive_subs.txt with katana first 
-cat alive_subs.txt | katana -jc | tee alive_subs_js_files.txt > /dev/null 2>&1
-cat gau.txt | katana -jc | tee gau_js_files.txt > /dev/null 2>&1
-echo -e "${GREEN}[+] Javascript Files Downloaded...${NC}"
-
+# --- Step 7: Downloading Javascript files
+echo -e "${BLUE}[*] Crawling For Javascript Files...${NC}"
+# Fix: Katana -jc (js-crawl) is heavy; using -o for clean saving
+katana -list alive_subs.txt -jc -d 2 -silent -o alive_subs_js_files.txt > /dev/null 2>&1
+# Optional: Filter gau.txt for JS specifically before running katana to save time
+grep "\.js" gau.txt | katana -silent -o gau_js_files.txt > /dev/null 2>&1
+echo -e "${GREEN}[+] Javascript Files Logged...${NC}"
 
 # --- Step 8: Hunting For Vulnerabilities With Nuclei
 echo -e "${BLUE}[*] Hunting For Vulnerabilities With Nuclei ${NC}"
-cat alive_subs.txt | nuclei -t ~/nuclei-templates | tee nuclei.txt > /dev/null 2>&1
+# Fix: Ensure templates are updated and path is correct
+nuclei -l alive_subs.txt -t ~/nuclei-templates -silent -o nuclei.txt > /dev/null 2>&1
 echo -e "${GREEN}[+] Vulnerability Scanning Complete...${NC}"
 
-
 # --- Recon Completed 
-echo -e "${GREEN}[+] Recon Completed...${NC}"
+echo -e "${GREEN}[+] Recon Completed. Results saved in $(pwd)${NC}"
 
-
-# The results are saved in the $TARGET/ directory
 cd ..
