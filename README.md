@@ -102,39 +102,6 @@ The script will create a directory named after your target (e.g., `example.com/`
 
 ---
 
-## Performance Tips
-
-- Results are cached: re-running against the same target will skip completed steps
-- Delete the target directory to force a full re-scan
-- Run on a system with good network connectivity for best results
-- Adjust tool-specific parameters in the script for custom scanning
-
----
-
-## Troubleshooting
-
-**Missing tool errors:** Run the installer script to ensure all dependencies are installed
-```bash
-./installer.sh
-```
-
-**Permission denied:** Make the script executable
-```bash
-chmod +x scopehound.sh installer.sh
-```
-
-**Tools not found:** Ensure your PATH includes Go binaries
-```bash
-source ~/.bashrc
-```
-
-**Nuclei templates not found:** Manually update templates
-```bash
-nuclei -update-templates
-```
-
----
-
 ## License
 
 This project is provided as-is for educational and authorized security testing purposes only.
