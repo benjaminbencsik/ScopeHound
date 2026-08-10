@@ -12,8 +12,6 @@ A simple, clean, and colorized Bash script that automates the initial phase of b
 
 ## Installation
 
-### Option 1: Automated Installation (Recommended)
-
 ```bash
 git clone https://github.com/benjaminbencsik/ScopeHound
 cd ScopeHound
@@ -28,24 +26,6 @@ The installer will:
 - Download Nuclei templates
 - Configure your shell environment
 - Make ScopeHound executable
-
-### Option 2: Manual Installation
-
-```bash
-git clone https://github.com/benjaminbencsik/ScopeHound
-cd ScopeHound
-chmod +x scopehound.sh
-```
-
-Then manually install each required tool:
-- [subfinder](https://github.com/projectdiscovery/subfinder)
-- [assetfinder](https://github.com/tomnomnom/assetfinder)
-- [findomain](https://github.com/findomain/findomain)
-- [naabu](https://github.com/projectdiscovery/naabu)
-- [httpx](https://github.com/projectdiscovery/httpx)
-- [gau](https://github.com/lc/gau)
-- [gf](https://github.com/tomnomnom/gf)
-- [nuclei](https://github.com/projectdiscovery/nuclei)
 
 ---
 
