@@ -12,64 +12,162 @@ A simple, clean, and colorized Bash script that automates the initial phase of b
 
 ## Installation
 
-1.  Clone this repository.
+### Prerequisites
 
-     ```git clone https://github.com/benjaminbencsik/ScopeHound```
+The following tools must be installed and available in your system's `PATH`:
 
-3.  Make the script executable:
-    
-    ```chmod +x scopehound.sh```
+- [subfinder](https://github.com/projectdiscovery/subfinder) - Subdomain enumeration
+- [assetfinder](https://github.com/tomnomnom/assetfinder) - Asset discovery
+- [findomain](https://github.com/findomain/findomain) - Subdomain enumeration
+- [naabu](https://github.com/projectdiscovery/naabu) - Port scanning
+- [httpx](https://github.com/projectdiscovery/httpx) - HTTP probing
+- [gau](https://github.com/lc/gau) - URL archive retrieval
+- [gf](https://github.com/tomnomnom/gf) - Pattern matching
+- [nuclei](https://github.com/projectdiscovery/nuclei) - Vulnerability scanner
 
+### Quick Start
 
+#### Option 1: Automated Installation (Recommended)
 
+```bash
+git clone https://github.com/benjaminbencsik/ScopeHound
+cd ScopeHound
+chmod +x installer.sh
+./installer.sh
+```
+
+The installer will:
+- Detect your operating system
+- Install system dependencies (Go, curl, git)
+- Install all required Go-based tools
+- Download Nuclei templates
+- Configure your shell environment
+- Make ScopeHound executable
+
+#### Option 2: Manual Installation
+
+```bash
+git clone https://github.com/benjaminbencsik/ScopeHound
+cd ScopeHound
+chmod +x scopehound.sh
+```
+
+Then manually install each required tool from the links above.
 
 ---
 
+## Usage
 
+Run the script against a single target domain:
 
-`ScopeHound` is a wrapper script, so you must have the following tools installed and available in your system's `PATH`.
+```bash
+./scopehound.sh example.com
+```
 
-* [subfinder](https://github.com/projectdiscovery/subfinder)
-* [assetfinder](https://github.com/tomnomnom/assetfinder)
-* [findomain](https://github.com/findomain/findomain)
-* [naabu](https://github.com/projectdiscovery/naabu)
-* [httpx](https://github.com/projectdiscovery/httpx)
+The script will create a directory named after your target (e.g., `example.com/`) containing:
+- `all_subdomains.txt` - All discovered subdomains
+- `open_ports.txt` - Discovered open ports
+- `alive_subs.txt` - Live web servers
+- `gau.txt` - Historical URLs
+- `gf_patterns/` - Pattern-matched results
+- `nuclei.txt` - Vulnerability scan results
 
-
-Usage
----
-1.  Run the script against a single target domain:
-    
-    ```./scopehound.sh target.com```
-    
-
-Example Output
 ---
 
-$ ./scopehound.sh target.com
+## Example Output
 
-[*] Gathering subdomains for target.com...
+```
+=======================================
+        ScopeHound Recon Engine        
+=======================================
+[i] Target: example.com
 
-[+] Subdomain gathering complete.
+[*] Scanning for Subdomains...
+[✓] Found 342 Unique Subdomains.
 
-[*] Combining and sorting unique subdomains...
+[*] Scanning Top 100 Ports...
+[✓] Port Scan Complete.
 
-[+] Found 123 unique subdomains.
+[*] Probing for Live Web Servers...
+[✓] Found 87 Alive Hosts.
 
-[*] Running fast port scan (Top 100) on subdomains...
+[*] Fetching URLs & processing GF patterns...
+[✓] Historical URLs and GF Patterns extracted.
 
-[+] Port scan complete.
+[*] Hunting for Vulnerabilities with Nuclei...
+[✓] Vulnerability Scanning Complete.
 
-[*] Probing for live web servers...
+================ RECON SUMMARY ================
+[+] Interesting Open Ports:
+    - api.example.com:8080
+    - admin.example.com:9000
+    - dev.example.com:3000
 
-[+] HTTP probing complete.
+[!] Critical Patterns Found:
+    - SQLi patterns found in: example.com/gf_patterns/sqli.txt
+    - RCE patterns found in: example.com/gf_patterns/rce.txt
 
---- Live Web Servers Found for target.com ---
+[+] Nuclei Findings (Low+):
+    - [critical] example.com/admin - Authentication Bypass
+    - [high] api.example.com:8080 - SQL Injection
 
-https://www.target.com
+===============================================
+[✓] Done! Full data in: example.com/
+```
 
-http://dev.target.com:8080
+---
 
-https://api.target.com
+## How It Works
 
-https://store.target.com
+1. **Subdomain Enumeration:** Runs three tools in parallel (`subfinder`, `assetfinder`, `findomain`) to maximize coverage
+2. **Deduplication:** Combines results and removes duplicates
+3. **Port Scanning:** Uses `naabu` for fast scanning of the top 100 ports
+4. **Live Web Probing:** Uses `httpx` to identify which hosts are actually serving web content
+5. **URL Historical Analysis:** Uses `gau` to fetch URLs from web archives
+6. **Pattern Matching:** Applies `gf` patterns to find potential SQL injection, RCE, and other vulnerability signatures
+7. **Vulnerability Scanning:** Runs `nuclei` templates for automated vulnerability detection
+
+---
+
+## Performance Tips
+
+- Results are cached: re-running against the same target will skip completed steps
+- Delete the target directory to force a full re-scan
+- Run on a system with good network connectivity for best results
+- Adjust tool-specific parameters in the script for custom scanning
+
+---
+
+## Troubleshooting
+
+**Missing tool errors:** Run the installer script to ensure all dependencies are installed
+```bash
+./installer.sh
+```
+
+**Permission denied:** Make the script executable
+```bash
+chmod +x scopehound.sh installer.sh
+```
+
+**Tools not found:** Ensure your PATH includes Go binaries
+```bash
+source ~/.bashrc
+```
+
+**Nuclei templates not found:** Manually update templates
+```bash
+nuclei -update-templates
+```
+
+---
+
+## License
+
+This project is provided as-is for educational and authorized security testing purposes only.
+
+---
+
+## Author
+
+[@benjaminbencsik](https://github.com/benjaminbencsik)
