@@ -12,22 +12,7 @@ A simple, clean, and colorized Bash script that automates the initial phase of b
 
 ## Installation
 
-### Prerequisites
-
-The following tools must be installed and available in your system's `PATH`:
-
-- [subfinder](https://github.com/projectdiscovery/subfinder) - Subdomain enumeration
-- [assetfinder](https://github.com/tomnomnom/assetfinder) - Asset discovery
-- [findomain](https://github.com/findomain/findomain) - Subdomain enumeration
-- [naabu](https://github.com/projectdiscovery/naabu) - Port scanning
-- [httpx](https://github.com/projectdiscovery/httpx) - HTTP probing
-- [gau](https://github.com/lc/gau) - URL archive retrieval
-- [gf](https://github.com/tomnomnom/gf) - Pattern matching
-- [nuclei](https://github.com/projectdiscovery/nuclei) - Vulnerability scanner
-
-### Quick Start
-
-#### Option 1: Automated Installation (Recommended)
+### Option 1: Automated Installation (Recommended)
 
 ```bash
 git clone https://github.com/benjaminbencsik/ScopeHound
@@ -44,7 +29,7 @@ The installer will:
 - Configure your shell environment
 - Make ScopeHound executable
 
-#### Option 2: Manual Installation
+### Option 2: Manual Installation
 
 ```bash
 git clone https://github.com/benjaminbencsik/ScopeHound
@@ -52,7 +37,15 @@ cd ScopeHound
 chmod +x scopehound.sh
 ```
 
-Then manually install each required tool from the links above.
+Then manually install each required tool:
+- [subfinder](https://github.com/projectdiscovery/subfinder)
+- [assetfinder](https://github.com/tomnomnom/assetfinder)
+- [findomain](https://github.com/findomain/findomain)
+- [naabu](https://github.com/projectdiscovery/naabu)
+- [httpx](https://github.com/projectdiscovery/httpx)
+- [gau](https://github.com/lc/gau)
+- [gf](https://github.com/tomnomnom/gf)
+- [nuclei](https://github.com/projectdiscovery/nuclei)
 
 ---
 
